@@ -1,0 +1,41 @@
+version: 1
+
+defaults:
+  init: /usr/local/bin/dumb-init
+  web:
+    name: web_galano
+    root: /var/www/html
+  mysql:
+    database: galano_wp
+    root_password: blah123
+
+services:
+  php:
+    image: php:5.6-fpm
+    working_dir: "{{ web.root }}"
+    command: ["{{ init }}", "php-fpm"]
+    expose:
+      - "9000"
+    volumes:
+      - "$PWD/html/:{{ web.root }}"
+  web:
+    image: nginx:1.11
+    working_dir: "{{ web.root }}"
+    command: ["{{ init }}", "nginx", "-g", "daemon off;"]
+    ports:
+      - "80:80"
+    volumes:
+      - "$PWD/html/:{{ web.root }}"
+    links:
+      - php
+  db:
+    image: mysql:5.5
+    command: ["{{ init }}", "docker-entrypoint.sh", "mysqld"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - "$PWD/db_data/:/var/lib/mysql/"
+      - "$PWD/db_dump/:/docker-entrypoint-initdb.d/:ro"
+    environment:
+      MYSQL_DATABASE: "{{ mysql.database }}"
+      MYSQL_ROOT_PASSWORD: "{{ mysql.root_password }}"
