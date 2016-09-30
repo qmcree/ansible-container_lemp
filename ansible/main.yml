@@ -38,6 +38,31 @@
       with_items:
         - usr/local/etc/php/php.ini
         - usr/local/etc/php-fpm.d/www.conf
+    - name: Install dependencies required for extensions
+      apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_items:
+        - libfreetype6-dev
+        - libjpeg62-turbo-dev
+        - libmcrypt-dev
+        - libpng12-dev
+        - php5-mysql
+    - name: Configure build for extensions
+      command: docker-php-ext-configure {{ item }}
+      with_items:
+        - gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
+        - pdo_mysql --with-pdo-mysql
+    - name: Install extensions
+      command: docker-php-ext-install -j1 {{ item }}
+      with_items:
+        - iconv
+        - mcrypt
+        - gd
+        - mysqli
+        - pdo
+        - pdo_mysql
 
 - hosts: db
   tasks:
