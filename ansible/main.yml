@@ -31,13 +31,6 @@
   vars:
     timezone: America/Chicago
   tasks:
-    - name: Add configs
-      template:
-        src: "{{ item }}.j2"
-        dest: "/{{ item }}"
-      with_items:
-        - usr/local/etc/php/php.ini
-        - usr/local/etc/php-fpm.d/www.conf
     - name: Install dependencies required for extensions
       apt:
         name: "{{ item }}"
@@ -63,6 +56,13 @@
         - mysqli
         - pdo
         - pdo_mysql
+    - name: Add configs
+      template:
+        src: "{{ item }}.j2"
+        dest: "/{{ item }}"
+      with_items:
+        - usr/local/etc/php/php.ini
+        - usr/local/etc/php-fpm.d/www.conf
 
 - hosts: db
   tasks:
