@@ -1,3 +1,5 @@
 db_dump/
+db_data/
+html/
 .idea/
 compose/
