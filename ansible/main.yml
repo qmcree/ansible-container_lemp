@@ -20,10 +20,19 @@
   tasks:
     - name: Install ca-certificates
       apt: name=ca-certificates state=latest
+    - name: Add nginx user to www-data group
+      user:
+        name: nginx
+        group: nginx
+        groups: www-data
+        state: present
     - name: Add NGINX config
       template:
         src: "{{ item }}.j2"
         dest: "/{{ item }}"
+        owner: nginx
+        group: nginx
+        mode: "ug=rw,o=r"
       with_items:
         - etc/nginx/conf.d/default.conf
 
@@ -60,6 +69,9 @@
       template:
         src: "{{ item }}.j2"
         dest: "/{{ item }}"
+        owner: www-data
+        group: www-data
+        mode: "ug=rw,o=r"
       with_items:
         - usr/local/etc/php/php.ini
         - usr/local/etc/php-fpm.d/www.conf
@@ -70,5 +82,26 @@
       template:
         src: "{{ item }}.j2"
         dest: "/{{ item }}"
+        owner: mysql
+        group: mysql
+        mode: "ug=rw,o=r"
       with_items:
         - etc/mysql/conf.d/my_custom.cnf
+
+- hosts: localhost
+  tasks:
+    - name: Add local systemd serice config for containers
+      tempate:
+        src: "{{ item }}.j2"
+        dest: "/{{ item }}"
+        owner: root
+        group: root
+        mode: "ug=rw,o=r
+      with_items:
+        - etc/systemd/system/ansible-container.service
+    - name: Enable systemd service and start it
+      systemd:
+        name: ansible-container
+        daemon_reload: yes
+        enabled: yes
+        state: started
