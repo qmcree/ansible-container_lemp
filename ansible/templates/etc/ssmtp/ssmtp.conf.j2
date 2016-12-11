@@ -1,0 +1,8 @@
+mailhub={{ smtp_host }}:{{ smtp_port }}
+AuthUser={{ smtp_user }}
+AuthPass={{ smtp_password }}
+UseSTARTTLS=Yes
+RewriteDomain=localhost
+Hostname=localhost
+FromLineOverride=Yes
+TLS_CA_File=/etc/ssl/certs/ca-certificates.crt

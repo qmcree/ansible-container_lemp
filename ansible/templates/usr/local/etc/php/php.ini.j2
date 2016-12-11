@@ -58,8 +58,8 @@ pdo_mysql.default_socket=
 [Phar]
 
 [mail function]
-SMTP = localhost
-smtp_port = 25
+sendmail_from => redacted@no.none
+sendmail_path = "/usr/sbin/sendmail -t -i"
 mail.add_x_header = Off
 
 [SQL]

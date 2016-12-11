@@ -39,8 +39,12 @@
 - hosts: php
   vars:
     timezone: America/Chicago
+    smtp_host: smtp-relay.gmail.com
+    smtp_port: 587
+    smtp_user: redacted@no.none
+    smtp_password: redacted
   tasks:
-    - name: Install dependencies required for extensions
+    - name: Install PHP dependencies required for extensions
       apt:
         name: "{{ item }}"
         state: latest
@@ -51,12 +55,12 @@
         - libmcrypt-dev
         - libpng12-dev
         - php5-mysql
-    - name: Configure build for extensions
+    - name: Configure PHP build for extensions
       command: docker-php-ext-configure {{ item }}
       with_items:
         - gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
         - pdo_mysql --with-pdo-mysql
-    - name: Install extensions
+    - name: Install PHP extensions
       command: docker-php-ext-install -j1 {{ item }}
       with_items:
         - iconv
@@ -65,7 +69,7 @@
         - mysqli
         - pdo
         - pdo_mysql
-    - name: Add configs
+    - name: Add PHP configs
       template:
         src: "{{ item }}.j2"
         dest: "/{{ item }}"
@@ -75,6 +79,24 @@
       with_items:
         - usr/local/etc/php/php.ini
         - usr/local/etc/php-fpm.d/www.conf
+    - name: Uninstall sendmail to prevent conflict with ssmtp
+      apt:
+        name: sendmail
+        state: absent
+    - name: Install ssmtp
+      apt:
+        name: ssmtp
+        state: latest
+        update_cache: yes
+    - name: Add ssmtp config
+      template:
+        src: "{{ item }}.j2"
+        dest: "/{{ item }}"
+        owner: www-data
+        group: www-data
+        mode: "ug=rw,o=r"
+      with_items:
+        - etc/ssmtp/ssmtp.conf
 
 - hosts: db
   tasks:
@@ -87,21 +109,3 @@
         mode: "ug=rw,o=r"
       with_items:
         - etc/mysql/conf.d/my_custom.cnf
-
-- hosts: localhost
-  tasks:
-    - name: Add local systemd serice config for containers
-      tempate:
-        src: "{{ item }}.j2"
-        dest: "/{{ item }}"
-        owner: root
-        group: root
-        mode: "ug=rw,o=r
-      with_items:
-        - etc/systemd/system/ansible-container.service
-    - name: Enable systemd service and start it
-      systemd:
-        name: ansible-container
-        daemon_reload: yes
-        enabled: yes
-        state: started
